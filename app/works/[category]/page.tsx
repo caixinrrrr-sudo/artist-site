@@ -1,5 +1,6 @@
 // app/works/[category]/page.tsx
 import Link from "next/link";
+import Image from "next/image";
 
 const categoryName: Record<string, string> = {
   oil: "油画",
@@ -13,6 +14,20 @@ const categoryName: Record<string, string> = {
   seal: "篆刻",
 };
 
+// 你的路由参数是英文 category，但你的图片文件夹是中文拼音/英文自定义
+// 这里做一个 “路由 -> public 文件夹名” 的映射
+const categoryFolder: Record<string, string> = {
+  oil: "youhua",
+  guohua: "guohua",
+  watercolor: "shuifen",
+  sculpture: "diaosu",
+  anime: "dongman",
+  print: "banhua",
+  sketch: "sumiao",
+  calligraphy: "shufa",
+  seal: "zhuanke",
+};
+
 export default async function WorkCategoryPage({
   params,
 }: {
@@ -21,12 +36,14 @@ export default async function WorkCategoryPage({
   const { category } = await params;
   const title = categoryName[category] ?? category;
 
-  // 先用占位数据，后面你换成真实作品列表即可
-  const items = Array.from({ length: 12 }).map((_, i) => ({
-    id: i + 1,
-    name: `${title} 作品 ${i + 1}`,
-    year: "—",
-  }));
+  const folder = categoryFolder[category] ?? category;
+
+  // 你现在实际有 3 张图：001.png, 002.png, 003.jpg
+  const items = [
+    { id: 1, name: `${title} 作品 1`, year: "—", src: `/artworks/${folder}/001.png` },
+    { id: 2, name: `${title} 作品 2`, year: "—", src: `/artworks/${folder}/002.png` },
+    { id: 3, name: `${title} 作品 3`, year: "—", src: `/artworks/${folder}/003.jpg` },
+  ];
 
   return (
     <div className="space-y-6">
@@ -40,7 +57,18 @@ export default async function WorkCategoryPage({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((it) => (
           <div key={it.id} className="rounded-2xl border bg-white overflow-hidden">
-            <div className="aspect-[4/3] bg-zinc-100" />
+            {/* 图片区域：用 next/image 填满容器 */}
+            <div className="relative aspect-[4/3] bg-zinc-100">
+              <Image
+                src={it.src}
+                alt={it.name}
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 50vw, 33vw"
+                priority={it.id === 1}
+              />
+            </div>
+
             <div className="p-4">
               <div className="font-medium">{it.name}</div>
               <div className="text-sm text-zinc-600">{it.year}</div>
