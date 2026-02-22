@@ -1,7 +1,19 @@
+// app/page.tsx
 import Image from "next/image";
 import Link from "next/link";
 
+// ✅ 中文标签（展示用）
 const TAGS = ["国画", "油画", "水彩/水粉", "版画", "素描", "书法与篆刻"];
+
+// ✅ 中文标签 -> 路由（很关键：不然会跳到 /works/国画 导致 404）
+const TAG_TO_ROUTE: Record<string, string> = {
+  国画: "guohua",
+  油画: "oil",
+  "水彩/水粉": "watercolor",
+  版画: "print",
+  素描: "sketch",
+  书法与篆刻: "calligraphy",
+};
 
 export default function Home() {
   return (
@@ -100,15 +112,18 @@ export default function Home() {
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
-                {TAGS.map((t) => (
-                  <Link
-                    key={t}
-                    href={`/works/${encodeURIComponent(t)}`}
-                    className="rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm hover:bg-zinc-50"
-                  >
-                    {t}
-                  </Link>
-                ))}
+                {TAGS.map((t) => {
+                  const route = TAG_TO_ROUTE[t] ?? "guohua";
+                  return (
+                    <Link
+                      key={t}
+                      href={`/works/${route}`}
+                      className="rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm hover:bg-zinc-50"
+                    >
+                      {t}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
 
@@ -118,27 +133,59 @@ export default function Home() {
               </div>
               <div className="mt-3 text-xl font-semibold">精选作品索引</div>
               <p className="mt-2 text-sm leading-6 text-zinc-600">
-                先把作品上传到后台，然后这里的分类入口会带你进入对应类别的作品列表。
+                先把作品图片放到 public/artworks/... 或通过后台上传，然后这里的分类入口会带你
+                进入对应类别的作品列表。
               </p>
               <div className="mt-4 text-xs text-zinc-500">
-                入口：/works 、/works/国画 等
+                入口：/works 、/works/guohua 等
               </div>
             </div>
           </div>
 
-          {/* Work section (placeholder, later we can make it dynamic from content.json) */}
+          {/* ✅ Work section（已替换为 3 张作品图） */}
           <div className="mt-12">
             <div className="text-2xl font-semibold">Work</div>
             <div className="mt-1 text-zinc-600">
-              先上传作品图片与信息，然后这里会显示作品卡片。
+              下面先放 3 张示例作品卡片（你现在的 001/002/003）。
             </div>
 
             <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="aspect-[4/3] rounded-2xl border border-zinc-200 bg-zinc-100"
-                />
+              {[
+                {
+                  title: "作品 001",
+                  src: "/artworks/guohua/001.png",
+                  href: "/works/guohua",
+                },
+                {
+                  title: "作品 002",
+                  src: "/artworks/guohua/002.png",
+                  href: "/works/guohua",
+                },
+                {
+                  title: "作品 003",
+                  src: "/artworks/guohua/003.jpg",
+                  href: "/works/guohua",
+                },
+              ].map((w) => (
+                <Link
+                  key={w.src}
+                  href={w.href}
+                  className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white"
+                >
+                  <div className="relative aspect-[4/3] bg-zinc-100">
+                    <Image
+                      src={w.src}
+                      alt={w.title}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      priority
+                    />
+                  </div>
+                  <div className="p-4">
+                    <div className="font-medium">{w.title}</div>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>
