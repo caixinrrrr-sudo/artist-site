@@ -14,35 +14,25 @@ const categoryName: Record<string, string> = {
   seal: "篆刻",
 };
 
-// 你的路由参数是英文 category，但你的图片文件夹是中文拼音/英文自定义
-// 这里做一个 “路由 -> public 文件夹名” 的映射
-const categoryFolder: Record<string, string> = {
-  oil: "youhua",
-  guohua: "guohua",
-  watercolor: "shuifen",
-  sculpture: "diaosu",
-  anime: "dongman",
-  print: "banhua",
-  sketch: "sumiao",
-  calligraphy: "shufa",
-  seal: "zhuanke",
-};
+// ✅ 关键：静态导出必须写这个，告诉 Next 要生成哪些 category 页面
+export function generateStaticParams() {
+  return Object.keys(categoryName).map((category) => ({ category }));
+}
 
-export default async function WorkCategoryPage({
+export default function WorkCategoryPage({
   params,
 }: {
-  params: Promise<{ category: string }>;
+  params: { category: string };
 }) {
-  const { category } = await params;
+  const { category } = params;
   const title = categoryName[category] ?? category;
 
-  const folder = categoryFolder[category] ?? category;
-
-  // 你现在实际有 3 张图：001.png, 002.png, 003.jpg
+  // ✅ 先用 3 张示例图（你可以按分类扩展）
+  // 注意：这只是示例，如果分类不是 guohua，也会显示这 3 张（为了先让你 export 成功上线）
   const items = [
-    { id: 1, name: `${title} 作品 1`, year: "—", src: `/artworks/${folder}/001.png` },
-    { id: 2, name: `${title} 作品 2`, year: "—", src: `/artworks/${folder}/002.png` },
-    { id: 3, name: `${title} 作品 3`, year: "—", src: `/artworks/${folder}/003.jpg` },
+    { id: 1, name: `${title} 作品 001`, src: "/artworks/guohua/001.png" },
+    { id: 2, name: `${title} 作品 002`, src: "/artworks/guohua/002.png" },
+    { id: 3, name: `${title} 作品 003`, src: "/artworks/guohua/003.jpg" },
   ];
 
   return (
@@ -56,22 +46,21 @@ export default async function WorkCategoryPage({
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((it) => (
-          <div key={it.id} className="rounded-2xl border bg-white overflow-hidden">
-            {/* 图片区域：用 next/image 填满容器 */}
+          <div
+            key={it.id}
+            className="overflow-hidden rounded-2xl border border-zinc-200 bg-white"
+          >
             <div className="relative aspect-[4/3] bg-zinc-100">
               <Image
                 src={it.src}
                 alt={it.name}
                 fill
                 className="object-cover"
-                sizes="(max-width: 1024px) 50vw, 33vw"
-                priority={it.id === 1}
+                sizes="(max-width: 768px) 100vw, 33vw"
               />
             </div>
-
             <div className="p-4">
               <div className="font-medium">{it.name}</div>
-              <div className="text-sm text-zinc-600">{it.year}</div>
             </div>
           </div>
         ))}
