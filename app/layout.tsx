@@ -3,7 +3,7 @@ import "./globals.css";
 import Link from "next/link";
 
 export const metadata = {
-  title: "陈家泠艺术鉴赏",
+  title: "陈琪艺术档案馆",
   description: "作品、展览、书籍、新闻与个人文献",
 };
 
@@ -14,7 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
             <Link href="/" className="font-semibold tracking-tight">
-              陈家泠艺术鉴赏
+              陈琪艺术鉴赏
             </Link>
 
             <nav className="flex gap-5 text-sm">
@@ -31,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <footer className="border-t bg-white">
           <div className="mx-auto max-w-6xl px-6 py-8 text-sm text-zinc-500">
-            © {new Date().getFullYear()} 陈家泠艺术鉴赏 · 建站中
+            © {new Date().getFullYear()} 陈琪艺术鉴赏 · 建站中
           </div>
         </footer>
       </body>

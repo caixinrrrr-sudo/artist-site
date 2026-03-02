@@ -1,11 +1,15 @@
 // app/page.tsx
 import Image from "next/image";
 import Link from "next/link";
+import { client } from "@/sanity/lib/client";
+import { urlFor } from "@/sanity/lib/image";
+
+export const revalidate = 0; // 开发期不缓存：你后台一改前台就变
 
 // ✅ 中文标签（展示用）
 const TAGS = ["国画", "油画", "水彩/水粉", "版画", "素描", "书法与篆刻"];
 
-// ✅ 中文标签 -> 路由（很关键：不然会跳到 /works/国画 导致 404）
+// ✅ 中文标签 -> 路由
 const TAG_TO_ROUTE: Record<string, string> = {
   国画: "guohua",
   油画: "oil",
@@ -15,14 +19,67 @@ const TAG_TO_ROUTE: Record<string, string> = {
   书法与篆刻: "calligraphy",
 };
 
-export default function Home() {
+type SiteText = {
+  key: string;
+  content?: string;
+};
+
+type Artwork = {
+  _id: string;
+  title?: string;
+  categorySlug?: string;
+  order?: number;
+  images?: any[];
+};
+
+async function getSiteText(keys: string[]) {
+  const rows: SiteText[] = await client.fetch(
+    `*[_type=="siteText" && key in $keys]{key, content}`,
+    { keys }
+  );
+  const map = new Map(rows.map((r) => [r.key, r.content || ""]));
+  return {
+    site_title: map.get("site_title") || "艺术鉴赏",
+    profile_name: map.get("profile_name") || "Artist",
+    profile_bio:
+      map.get("profile_bio") || "请在 Sanity 后台 siteText 填写 profile_bio。",
+    home_intro:
+      map.get("home_intro") ||
+      "按类别浏览：国画、油画、水彩/水粉、版画、素描、书法与篆刻。",
+  };
+}
+
+async function getFeaturedArtworks() {
+  const works: Artwork[] = await client.fetch(`
+    *[_type=="artwork" && published != false]
+    | order(coalesce(order, 999999) asc, _createdAt desc)[0...3]{
+      _id,
+      title,
+      order,
+      "categorySlug": category->slug.current,
+      images
+    }
+  `);
+  return works;
+}
+
+export default async function Home() {
+  const text = await getSiteText([
+    "site_title",
+    "profile_name",
+    "profile_bio",
+    "home_intro",
+  ]);
+
+  const featured = await getFeaturedArtworks();
+
   return (
     <div className="min-h-screen bg-zinc-50 font-sans text-zinc-900">
       {/* Top bar */}
       <div className="sticky top-0 z-20 border-b border-zinc-200 bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link href="/" className="text-lg font-semibold tracking-tight">
-            陈家泠艺术鉴赏
+            {text.site_title}
           </Link>
 
           <nav className="flex items-center gap-6 text-sm">
@@ -58,7 +115,9 @@ export default function Home() {
           <div className="flex items-center gap-4">
             <div className="h-14 w-14 overflow-hidden rounded-full bg-zinc-200" />
             <div>
-              <div className="text-base font-semibold leading-6">Jialin Chen</div>
+              <div className="text-base font-semibold leading-6">
+                {text.profile_name}
+              </div>
               <div className="text-sm text-zinc-500">Artist</div>
             </div>
           </div>
@@ -74,9 +133,8 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="mt-6 text-sm leading-6 text-zinc-600">
-            以东方笔墨为根，以现代审美为翼。这里汇集代表作品、展览与文献资料，
-            便于系统浏览与研究。
+          <div className="mt-6 whitespace-pre-line text-sm leading-6 text-zinc-600">
+            {text.profile_bio}
           </div>
 
           <div className="mt-6 flex gap-3">
@@ -95,7 +153,7 @@ export default function Home() {
           </div>
 
           <div className="mt-4 text-xs text-zinc-400">
-            Tip: 点击右上角 Admin 可上传/编辑作品与内容。
+            后台已连接：改完会自动更新前台（开发期 revalidate=0）。
           </div>
         </section>
 
@@ -106,9 +164,8 @@ export default function Home() {
               <h1 className="text-5xl font-semibold leading-[1.05] tracking-tight">
                 代表作品
               </h1>
-              <p className="mt-5 max-w-2xl text-lg leading-8 text-zinc-600">
-                按类别浏览：国画、油画、水彩/水粉、版画、素描、书法与篆刻。
-                你也可以在“作品”里按系列或年代继续细分。
+              <p className="mt-5 max-w-2xl whitespace-pre-line text-lg leading-8 text-zinc-600">
+                {text.home_intro}
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
@@ -133,60 +190,55 @@ export default function Home() {
               </div>
               <div className="mt-3 text-xl font-semibold">精选作品索引</div>
               <p className="mt-2 text-sm leading-6 text-zinc-600">
-                先把作品图片放到 public/artworks/... 或通过后台上传，然后这里的分类入口会带你
-                进入对应类别的作品列表。
+                这里会自动展示你在 Sanity 后台上传的作品（每个作品取第一张图）。
               </p>
-              <div className="mt-4 text-xs text-zinc-500">
-                入口：/works 、/works/guohua 等
-              </div>
+              <div className="mt-4 text-xs text-zinc-500">入口：/works</div>
             </div>
           </div>
 
-          {/* ✅ Work section（已替换为 3 张作品图） */}
+          {/* ✅ Work section（从 Sanity 自动拉取 3 个作品） */}
           <div className="mt-12">
             <div className="text-2xl font-semibold">Work</div>
             <div className="mt-1 text-zinc-600">
-              下面先放 3 张示例作品卡片（你现在的 001/002/003）。
+              自动从后台拉取最新/排序靠前的 3 个作品。
             </div>
 
             <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
-              {[
-                {
-                  title: "作品 001",
-                  src: "/artworks/guohua/001.png",
-                  href: "/works/guohua",
-                },
-                {
-                  title: "作品 002",
-                  src: "/artworks/guohua/002.png",
-                  href: "/works/guohua",
-                },
-                {
-                  title: "作品 003",
-                  src: "/artworks/guohua/003.jpg",
-                  href: "/works/guohua",
-                },
-              ].map((w) => (
-                <Link
-                  key={w.src}
-                  href={w.href}
-                  className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white"
-                >
-                  <div className="relative aspect-[4/3] bg-zinc-100">
-                    <Image
-                      src={w.src}
-                      alt={w.title}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                      priority
-                    />
-                  </div>
-                  <div className="p-4">
-                    <div className="font-medium">{w.title}</div>
-                  </div>
-                </Link>
-              ))}
+              {featured.map((w) => {
+                const firstImg = w.images?.[0];
+                const imgUrl = firstImg
+                  ? urlFor(firstImg).width(1200).height(900).fit("crop").url()
+                  : null;
+
+                const href = w.categorySlug ? `/works/${w.categorySlug}` : "/works";
+
+                return (
+                  <Link
+                    key={w._id}
+                    href={href}
+                    className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white"
+                  >
+                    <div className="relative aspect-[4/3] bg-zinc-100">
+                      {imgUrl ? (
+                        <Image
+                          src={imgUrl}
+                          alt={w.title || "Artwork"}
+                          fill
+                          className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-sm text-zinc-400">
+                          暂无图片
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <div className="font-medium">{w.title || "未命名作品"}</div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
 
