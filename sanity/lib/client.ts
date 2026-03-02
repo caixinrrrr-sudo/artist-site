@@ -1,9 +1,8 @@
-﻿// sanity/lib/client.ts
-import { createClient } from "@sanity/client";
+﻿import { createClient } from "@sanity/client";
 
 export const client = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET!,
-  apiVersion: "2024-01-01",
-  useCdn: false, // 开发期建议 false，保证你后台一改前台更快看到
+  apiVersion: "2025-01-01",
+  useCdn: true,
 });
