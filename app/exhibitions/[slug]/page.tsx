@@ -1,7 +1,7 @@
 ﻿import Link from "next/link";
 
 const EXHIBITIONS = [
-  { slug: "overview", title: "展览概览", date: "—", location: "—", content: "这里将展示陈家泠的展览信息。你后续可以把内容替换成真实资料。" },
+  { slug: "overview", title: "展览概览", date: "—", location: "—", content: "这里将展示陈琪的展览信息。你后续可以把内容替换成真实资料。" },
   { slug: "solo-2020", title: "个展示例（2020）", date: "2020", location: "上海", content: "示例展览页面，用于静态导出。后续可扩展为真实展览条目。" },
   { slug: "group-2018", title: "群展示例（2018）", date: "2018", location: "北京", content: "示例展览页面，用于静态导出。后续可扩展为真实展览条目。" }
 ];

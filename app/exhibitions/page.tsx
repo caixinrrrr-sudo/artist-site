@@ -1,4 +1,4 @@
-// app/exhibitions/[slug]/page.tsx
+﻿// app/exhibitions/[slug]/page.tsx
 import Link from "next/link";
 
 const EXHIBITIONS = [
@@ -7,7 +7,7 @@ const EXHIBITIONS = [
     title: "展览概览",
     date: "—",
     location: "—",
-    content: "这里将展示陈家泠的展览信息。你后续可以把内容替换成真实资料。",
+    content: "这里将展示陈琪的展览信息。你后续可以把内容替换成真实资料。",
   },
   {
     slug: "solo-2020",
